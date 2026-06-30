@@ -3,6 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="在线藏文字体图片生成器，支持手机和电脑使用，可导出透明背景 PNG。"
+    />
     <title>藏文字体图片生成器</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,11 +18,11 @@
   </head>
   <body>
     <main class="app">
-      <section class="workspace" aria-label="字体生成器">
+      <section class="workspace" aria-label="藏文字体图片生成器">
         <aside class="panel controls">
           <div class="brand">
             <h1>藏文字体图片生成器</h1>
-            <p>输入藏文，选择字体和样式，一键导出 PNG。</p>
+            <p>所有默认样式都在线加载，手机和电脑无需安装字体即可导出 PNG。</p>
           </div>
 
           <label class="field">
@@ -28,7 +32,7 @@
 
           <div class="grid two">
             <label class="field">
-              <span>字体</span>
+              <span>在线字体样式</span>
               <select id="fontSelect"></select>
             </label>
             <label class="field">
@@ -64,31 +68,22 @@
             <span>导出透明背景 PNG</span>
           </label>
 
-          <div class="field">
-            <span>字重</span>
-            <div class="segmented" role="group" aria-label="字重">
-              <button type="button" class="weight active" data-weight="400">常规</button>
-              <button type="button" class="weight" data-weight="600">中粗</button>
-              <button type="button" class="weight" data-weight="800">粗体</button>
-            </div>
-          </div>
-
           <label class="field upload">
-            <span>导入字体文件</span>
+            <span>导入自己的字体文件</span>
             <input id="fontUpload" type="file" accept=".ttf,.otf,.woff,.woff2" multiple />
           </label>
 
           <div class="actions">
-            <button id="downloadSelected" type="button">下载当前字体 PNG</button>
-            <button id="downloadAll" type="button" class="secondary">批量下载所有预览</button>
+            <button id="downloadSelected" type="button">下载当前 PNG</button>
+            <button id="downloadAll" type="button" class="secondary">批量下载全部样式</button>
           </div>
         </aside>
 
         <section class="preview-area">
           <div class="toolbar">
             <div>
-              <strong id="currentFontName">Microsoft Himalaya</strong>
-              <span id="fontStatus">正在检测字体可用性</span>
+              <strong id="currentFontName">Noto Serif Tibetan Regular</strong>
+              <span id="fontStatus">正在加载在线字体</span>
             </div>
             <button id="refresh" type="button" title="刷新预览">刷新</button>
           </div>
@@ -96,8 +91,8 @@
           <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
 
           <div class="gallery-head">
-            <h2>字体预览</h2>
-            <span>已安装或导入的字体会显示真实效果</span>
+            <h2>在线样式预览</h2>
+            <span>默认样式无需本机安装字体，导出图片效果与预览一致</span>
           </div>
           <div id="fontGallery" class="gallery"></div>
         </section>

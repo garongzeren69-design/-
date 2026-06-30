@@ -1,24 +1,18 @@
-const presetFonts = [
-  { name: "Noto Serif Tibetan", source: "Google Fonts 在线", online: true },
-  { name: "Jomolhari", source: "Google Fonts 在线", online: true },
-  { name: "Microsoft Himalaya", source: "Windows 系统" },
-  { name: "Kailasa", source: "macOS 系统" },
-  { name: "Kokonor", source: "macOS 系统" },
-  { name: "Noto Sans Tibetan", source: "Noto/本地" },
-  { name: "DDC Uchen", source: "代表性预设" },
-  { name: "DDC Rinzin", source: "代表性预设" },
-  { name: "Tibetan Machine Uni", source: "代表性预设" },
-  { name: "BabelStone Tibetan", source: "代表性预设" },
-  { name: "Monlam Uni OuChan1", source: "Monlam 预设" },
-  { name: "Monlam Uni Chouk", source: "Monlam 预设" },
-  { name: "Monlam Uni Dutsa1", source: "Monlam 预设" },
-  { name: "Monlam Uni PayTsik", source: "Monlam 预设" },
-  { name: "Qomolangma-Uchen Sarchung", source: "Qomolangma 预设" },
-  { name: "Qomolangma-Tsumachu", source: "Qomolangma 预设" },
-  { name: "Qomolangma-Title", source: "Qomolangma 预设" },
-  { name: "Qomolangma-Woodblock", source: "Qomolangma 预设" },
-  { name: "TCRC Youtso Unicode", source: "TCRC 预设" },
-  { name: "TCRC Youtso", source: "TCRC 预设" }
+const onlineStyles = [
+  { id: "noto-thin", label: "Noto Serif Tibetan Thin", family: "Noto Serif Tibetan", weight: 100, source: "在线字体", effect: "plain" },
+  { id: "noto-light", label: "Noto Serif Tibetan Light", family: "Noto Serif Tibetan", weight: 300, source: "在线字体", effect: "plain" },
+  { id: "noto-regular", label: "Noto Serif Tibetan Regular", family: "Noto Serif Tibetan", weight: 400, source: "在线字体", effect: "plain" },
+  { id: "noto-semibold", label: "Noto Serif Tibetan Semibold", family: "Noto Serif Tibetan", weight: 600, source: "在线字体", effect: "plain" },
+  { id: "noto-bold", label: "Noto Serif Tibetan Bold", family: "Noto Serif Tibetan", weight: 700, source: "在线字体", effect: "plain" },
+  { id: "noto-black", label: "Noto Serif Tibetan Black", family: "Noto Serif Tibetan", weight: 900, source: "在线字体", effect: "plain" },
+  { id: "jomolhari-regular", label: "Jomolhari Regular", family: "Jomolhari", weight: 400, source: "在线字体", effect: "plain" },
+  { id: "jomolhari-ink", label: "Jomolhari Ink", family: "Jomolhari", weight: 400, source: "在线字体样式", effect: "ink" },
+  { id: "noto-outline", label: "Noto Serif Outline", family: "Noto Serif Tibetan", weight: 700, source: "在线字体样式", effect: "outline" },
+  { id: "noto-gold", label: "Noto Serif Gold", family: "Noto Serif Tibetan", weight: 800, source: "在线字体样式", effect: "gold" },
+  { id: "noto-shadow", label: "Noto Serif Shadow", family: "Noto Serif Tibetan", weight: 700, source: "在线字体样式", effect: "shadow" },
+  { id: "noto-red-seal", label: "Noto Serif Red Seal", family: "Noto Serif Tibetan", weight: 900, source: "在线字体样式", effect: "seal" },
+  { id: "noto-ice", label: "Noto Serif Ice Blue", family: "Noto Serif Tibetan", weight: 500, source: "在线字体样式", effect: "ice" },
+  { id: "noto-night", label: "Noto Serif Night", family: "Noto Serif Tibetan", weight: 600, source: "在线字体样式", effect: "night" }
 ];
 
 const els = {
@@ -40,11 +34,16 @@ const els = {
   refresh: document.querySelector("#refresh")
 };
 
-let fonts = [...presetFonts];
-let currentWeight = "400";
+let styles = [...onlineStyles];
+let selectedStyleId = onlineStyles[2].id;
+let fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
 function cssFontName(name) {
   return `"${name.replace(/"/g, '\\"')}"`;
+}
+
+function getSelectedStyle() {
+  return styles.find((style) => style.id === selectedStyleId) || styles[0];
 }
 
 function getSettings() {
@@ -55,29 +54,15 @@ function getSettings() {
     padding: Number(els.padding.value) || 48,
     textColor: els.textColor.value,
     backgroundColor: els.backgroundColor.value,
-    transparentBackground: els.transparentBackground.checked,
-    weight: currentWeight
+    transparentBackground: els.transparentBackground.checked
   };
 }
 
-async function isFontAvailable(fontName) {
-  const fontMeta = fonts.find((font) => font.name === fontName);
-  if (fontMeta?.imported || fontMeta?.online) return true;
-  if (fontName === "Microsoft Himalaya") return true;
-  await document.fonts.ready;
-
-  const probe = document.createElement("canvas").getContext("2d");
-  const sample = "བོད་ཡིག་གཟུགས་བརྙན";
-  const fallbacks = ["serif", "sans-serif", "monospace"];
-  const fallbackWidths = fallbacks.map((fallback) => {
-    probe.font = `48px ${fallback}`;
-    return probe.measureText(sample).width;
-  });
-
-  return fallbacks.some((fallback, index) => {
-    probe.font = `48px ${cssFontName(fontName)}, ${fallback}`;
-    return Math.abs(probe.measureText(sample).width - fallbackWidths[index]) > 0.5;
-  });
+async function waitForStyleFont(style) {
+  await fontReady;
+  if (document.fonts?.load) {
+    await document.fonts.load(`${style.weight} 48px ${cssFontName(style.family)}`, "བོད");
+  }
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -117,14 +102,100 @@ function wrapText(ctx, text, maxWidth) {
   return lines;
 }
 
-function renderCanvas(canvas, fontName, options = {}) {
+function applyEffect(ctx, style, settings, width, height) {
+  ctx.shadowBlur = 0;
+  ctx.shadowColor = "transparent";
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.miterLimit = 2;
+
+  if (style.effect === "gold") {
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, "#8f5d12");
+    gradient.addColorStop(0.45, "#e0b75a");
+    gradient.addColorStop(1, "#6f470e");
+    ctx.fillStyle = gradient;
+    ctx.shadowColor = "rgba(80, 47, 8, 0.2)";
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 3;
+    return;
+  }
+
+  if (style.effect === "seal") {
+    ctx.fillStyle = "#9f1d1d";
+    ctx.strokeStyle = "#5d0d0d";
+    ctx.lineWidth = Math.max(2, settings.fontSize * 0.035);
+    return;
+  }
+
+  if (style.effect === "ice") {
+    ctx.fillStyle = "#1f6f8b";
+    ctx.strokeStyle = "#d7f2f6";
+    ctx.lineWidth = Math.max(2, settings.fontSize * 0.04);
+    ctx.shadowColor = "rgba(31, 111, 139, 0.25)";
+    ctx.shadowBlur = 10;
+    return;
+  }
+
+  if (style.effect === "night") {
+    ctx.fillStyle = "#e8edf2";
+    ctx.strokeStyle = "#15202b";
+    ctx.lineWidth = Math.max(3, settings.fontSize * 0.055);
+    ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 4;
+    return;
+  }
+
+  if (style.effect === "ink") {
+    ctx.fillStyle = settings.textColor;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetX = 1;
+    ctx.shadowOffsetY = 1;
+    return;
+  }
+
+  if (style.effect === "outline") {
+    ctx.fillStyle = settings.textColor;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = Math.max(3, settings.fontSize * 0.07);
+    ctx.shadowColor = "rgba(0, 0, 0, 0.18)";
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
+    return;
+  }
+
+  if (style.effect === "shadow") {
+    ctx.fillStyle = settings.textColor;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.28)";
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = Math.max(2, settings.fontSize * 0.045);
+    ctx.shadowOffsetY = Math.max(2, settings.fontSize * 0.045);
+    return;
+  }
+
+  ctx.fillStyle = settings.textColor;
+}
+
+function paintText(ctx, line, x, y, style) {
+  if (["outline", "seal", "ice", "night"].includes(style.effect)) {
+    ctx.strokeText(line, x, y);
+  }
+  ctx.fillText(line, x, y);
+}
+
+function renderCanvas(canvas, style, options = {}) {
   const settings = getSettings();
   const scale = options.scale || window.devicePixelRatio || 1;
   const width = options.width || 1180;
   const maxTextWidth = width - settings.padding * 2;
   const ctx = canvas.getContext("2d");
+  const fontStack = `${style.weight} ${settings.fontSize}px ${cssFontName(style.family)}, "Noto Serif Tibetan", serif`;
 
-  ctx.font = `${settings.weight} ${settings.fontSize}px ${cssFontName(fontName)}, "Microsoft Himalaya", serif`;
+  ctx.font = fontStack;
   const lines = wrapText(ctx, settings.text, maxTextWidth);
   const linePx = settings.fontSize * settings.lineHeight;
   const height = Math.max(180, settings.padding * 2 + lines.length * linePx);
@@ -135,18 +206,20 @@ function renderCanvas(canvas, fontName, options = {}) {
 
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, width, height);
+
   if (!settings.transparentBackground) {
-    ctx.fillStyle = settings.backgroundColor;
+    ctx.fillStyle = style.effect === "night" ? "#17202a" : settings.backgroundColor;
     ctx.fillRect(0, 0, width, height);
   }
-  ctx.fillStyle = settings.textColor;
+
   ctx.textBaseline = "alphabetic";
   ctx.direction = "ltr";
-  ctx.font = `${settings.weight} ${settings.fontSize}px ${cssFontName(fontName)}, "Microsoft Himalaya", serif`;
+  ctx.font = fontStack;
+  applyEffect(ctx, style, settings, width, height);
 
   lines.forEach((line, index) => {
     const y = settings.padding + settings.fontSize + index * linePx;
-    ctx.fillText(line, settings.padding, y);
+    paintText(ctx, line, settings.padding, y, style);
   });
 }
 
@@ -154,38 +227,40 @@ function makeSafeFileName(name) {
   return name.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_");
 }
 
-function downloadCanvas(canvas, fontName) {
+function downloadCanvas(canvas, style) {
   const link = document.createElement("a");
-  link.download = `${makeSafeFileName(fontName)}_藏文字体.png`;
+  link.download = `${makeSafeFileName(style.label)}_藏文字体.png`;
   link.href = canvas.toDataURL("image/png");
   link.click();
 }
 
 async function updateMain() {
-  const fontName = els.fontSelect.value;
-  els.currentFontName.textContent = fontName;
-  renderCanvas(els.mainCanvas, fontName);
-  const available = await isFontAvailable(fontName);
-  els.fontStatus.textContent = available ? "预览已生成，当前字体可用" : "预览已生成；如字形没变化，请安装或导入该字体";
+  const style = getSelectedStyle();
+  els.currentFontName.textContent = style.label;
+  els.fontStatus.textContent = "正在加载在线字体";
+  await waitForStyleFont(style);
+  renderCanvas(els.mainCanvas, style);
   els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+  els.fontStatus.textContent = `${style.source}已加载，可在线导出 PNG`;
 }
 
 async function buildGallery() {
   els.gallery.innerHTML = "";
 
-  for (const font of fonts) {
+  for (const style of styles) {
     const card = document.createElement("article");
     card.className = "font-card";
 
     const header = document.createElement("header");
     const title = document.createElement("strong");
     const status = document.createElement("small");
-    title.textContent = font.name;
-    status.textContent = font.imported ? "已导入" : "检测中";
+    title.textContent = style.label;
+    status.textContent = style.source;
     header.append(title, status);
 
     const canvas = document.createElement("canvas");
-    renderCanvas(canvas, font.name, { width: 760, scale: 1.5 });
+    await waitForStyleFont(style);
+    renderCanvas(canvas, style, { width: 760, scale: 1.5 });
     canvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
 
     const footer = document.createElement("footer");
@@ -193,36 +268,38 @@ async function buildGallery() {
     const save = document.createElement("button");
     choose.type = "button";
     save.type = "button";
-    choose.textContent = "使用这个字体";
+    choose.textContent = "使用这个样式";
     save.textContent = "↓";
     save.title = "下载 PNG";
     save.className = "icon-button secondary";
     footer.append(choose, save);
 
     choose.addEventListener("click", () => {
-      els.fontSelect.value = font.name;
+      selectedStyleId = style.id;
+      els.fontSelect.value = style.id;
       updateMain();
     });
-    save.addEventListener("click", () => downloadCanvas(canvas, font.name));
+    save.addEventListener("click", async () => {
+      await waitForStyleFont(style);
+      renderCanvas(canvas, style, { width: 760, scale: 2 });
+      downloadCanvas(canvas, style);
+      renderCanvas(canvas, style, { width: 760, scale: 1.5 });
+    });
 
     card.append(header, canvas, footer);
     els.gallery.append(card);
-
-    if (!font.imported) {
-      const available = await isFontAvailable(font.name);
-      status.textContent = available ? font.source : "需安装/导入";
-    }
   }
 }
 
 function fillFontSelect() {
   els.fontSelect.innerHTML = "";
-  for (const font of fonts) {
+  for (const style of styles) {
     const option = document.createElement("option");
-    option.value = font.name;
-    option.textContent = font.name;
+    option.value = style.id;
+    option.textContent = style.label;
     els.fontSelect.append(option);
   }
+  els.fontSelect.value = selectedStyleId;
 }
 
 async function addUploadedFonts(files) {
@@ -232,42 +309,38 @@ async function addUploadedFonts(files) {
     const face = new FontFace(family, `url(${url})`);
     await face.load();
     document.fonts.add(face);
-    fonts = fonts.filter((font) => font.name !== family);
-    fonts.unshift({ name: family, source: "本地导入", imported: true });
+    const id = `upload-${family.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    styles = styles.filter((style) => style.id !== id);
+    styles.unshift({ id, label: family, family, weight: 400, source: "本地导入", effect: "plain" });
+    selectedStyleId = id;
   }
   fillFontSelect();
-  els.fontSelect.value = fonts[0].name;
+  await updateMain();
+  await buildGallery();
+}
+
+function scheduleRender() {
   updateMain();
   buildGallery();
 }
 
 function bindEvents() {
-  const rerender = () => {
-    updateMain();
-    buildGallery();
-  };
-
   ["input", "change"].forEach((eventName) => {
-    els.textInput.addEventListener(eventName, rerender);
-    els.fontSize.addEventListener(eventName, rerender);
-    els.lineHeight.addEventListener(eventName, rerender);
-    els.padding.addEventListener(eventName, rerender);
-    els.textColor.addEventListener(eventName, rerender);
-    els.backgroundColor.addEventListener(eventName, rerender);
-    els.transparentBackground.addEventListener(eventName, rerender);
+    els.textInput.addEventListener(eventName, scheduleRender);
+    els.fontSize.addEventListener(eventName, scheduleRender);
+    els.lineHeight.addEventListener(eventName, scheduleRender);
+    els.padding.addEventListener(eventName, scheduleRender);
+    els.textColor.addEventListener(eventName, scheduleRender);
+    els.backgroundColor.addEventListener(eventName, scheduleRender);
+    els.transparentBackground.addEventListener(eventName, scheduleRender);
   });
 
-  els.fontSelect.addEventListener("change", updateMain);
-  els.refresh.addEventListener("click", rerender);
-
-  document.querySelectorAll(".weight").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll(".weight").forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      currentWeight = button.dataset.weight;
-      rerender();
-    });
+  els.fontSelect.addEventListener("change", () => {
+    selectedStyleId = els.fontSelect.value;
+    updateMain();
   });
+
+  els.refresh.addEventListener("click", scheduleRender);
 
   els.fontUpload.addEventListener("change", (event) => {
     addUploadedFonts([...event.target.files]).catch((error) => {
@@ -275,17 +348,20 @@ function bindEvents() {
     });
   });
 
-  els.downloadSelected.addEventListener("click", () => {
-    renderCanvas(els.mainCanvas, els.fontSelect.value, { scale: 2 });
-    downloadCanvas(els.mainCanvas, els.fontSelect.value);
-    updateMain();
+  els.downloadSelected.addEventListener("click", async () => {
+    const style = getSelectedStyle();
+    await waitForStyleFont(style);
+    renderCanvas(els.mainCanvas, style, { scale: 2 });
+    downloadCanvas(els.mainCanvas, style);
+    renderCanvas(els.mainCanvas, style);
   });
 
-  els.downloadAll.addEventListener("click", () => {
-    for (const font of fonts) {
+  els.downloadAll.addEventListener("click", async () => {
+    for (const style of styles) {
+      await waitForStyleFont(style);
       const canvas = document.createElement("canvas");
-      renderCanvas(canvas, font.name, { scale: 2 });
-      downloadCanvas(canvas, font.name);
+      renderCanvas(canvas, style, { scale: 2 });
+      downloadCanvas(canvas, style);
     }
   });
 }

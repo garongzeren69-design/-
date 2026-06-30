@@ -1,6 +1,8 @@
 # Tibetan Font Image Generator
 
 A responsive online page for generating Tibetan font preview images as PNG.
+The default presets use web-loaded Tibetan fonts and canvas effects, so users do
+not need to install fonts on desktop or mobile devices.
 
 ## Local Preview
 
