@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>藏文字体图片生成器</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jomolhari&family=Noto+Serif+Tibetan:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="workspace" aria-label="字体生成器">
+        <aside class="panel controls">
+          <div class="brand">
+            <h1>藏文字体图片生成器</h1>
+            <p>输入藏文，选择字体和样式，一键导出 PNG。</p>
+          </div>
+
+          <label class="field">
+            <span>藏文内容</span>
+            <textarea id="textInput" spellcheck="false">བོད་ཡིག་གི་ཡིག་གཟུགས་དཔེ་སྟོན།</textarea>
+          </label>
+
+          <div class="grid two">
+            <label class="field">
+              <span>字体</span>
+              <select id="fontSelect"></select>
+            </label>
+            <label class="field">
+              <span>字号</span>
+              <input id="fontSize" type="number" min="16" max="220" value="72" />
+            </label>
+          </div>
+
+          <div class="grid two">
+            <label class="field">
+              <span>行距</span>
+              <input id="lineHeight" type="number" min="0.8" max="2.4" step="0.05" value="1.35" />
+            </label>
+            <label class="field">
+              <span>留白</span>
+              <input id="padding" type="number" min="0" max="180" value="48" />
+            </label>
+          </div>
+
+          <div class="grid two">
+            <label class="field">
+              <span>文字颜色</span>
+              <input id="textColor" type="color" value="#121212" />
+            </label>
+            <label class="field">
+              <span>背景颜色</span>
+              <input id="backgroundColor" type="color" value="#f8f3e8" />
+            </label>
+          </div>
+
+          <label class="toggle">
+            <input id="transparentBackground" type="checkbox" />
+            <span>导出透明背景 PNG</span>
+          </label>
+
+          <div class="field">
+            <span>字重</span>
+            <div class="segmented" role="group" aria-label="字重">
+              <button type="button" class="weight active" data-weight="400">常规</button>
+              <button type="button" class="weight" data-weight="600">中粗</button>
+              <button type="button" class="weight" data-weight="800">粗体</button>
+            </div>
+          </div>
+
+          <label class="field upload">
+            <span>导入字体文件</span>
+            <input id="fontUpload" type="file" accept=".ttf,.otf,.woff,.woff2" multiple />
+          </label>
+
+          <div class="actions">
+            <button id="downloadSelected" type="button">下载当前字体 PNG</button>
+            <button id="downloadAll" type="button" class="secondary">批量下载所有预览</button>
+          </div>
+        </aside>
+
+        <section class="preview-area">
+          <div class="toolbar">
+            <div>
+              <strong id="currentFontName">Microsoft Himalaya</strong>
+              <span id="fontStatus">正在检测字体可用性</span>
+            </div>
+            <button id="refresh" type="button" title="刷新预览">刷新</button>
+          </div>
+
+          <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
+
+          <div class="gallery-head">
+            <h2>字体预览</h2>
+            <span>已安装或导入的字体会显示真实效果</span>
+          </div>
+          <div id="fontGallery" class="gallery"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
