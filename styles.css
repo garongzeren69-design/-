@@ -190,6 +190,10 @@ button.secondary,
   backdrop-filter: blur(10px);
 }
 
+.canvas-tools-toggle {
+  display: none;
+}
+
 #mainCanvas {
   display: block;
   width: 100%;
@@ -580,17 +584,100 @@ body.canvas-fullscreen .canvas-corner-button {
   right: auto;
 }
 
+body.canvas-fullscreen .canvas-tools-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 90;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  place-items: center;
+  border-color: rgba(28, 34, 37, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 253, 248, 0.78);
+  color: var(--ink);
+  padding: 0;
+  font-size: 16px;
+  font-weight: 800;
+  backdrop-filter: blur(12px);
+}
+
 body.canvas-fullscreen .control-panel {
   position: fixed;
   top: 12px;
   right: 12px;
-  z-index: 70;
-  width: min(330px, calc(100vw - 72px));
-  max-height: calc(100vh - 24px);
+  z-index: 80;
+  width: min(246px, calc(100vw - 70px));
+  max-height: min(58vh, 520px);
   overflow: auto;
-  padding: 12px;
-  background: rgba(255, 253, 248, 0.92);
+  padding: 9px;
+  background: rgba(255, 253, 248, 0.66);
   backdrop-filter: blur(14px);
+  box-shadow: 0 14px 28px rgba(18, 15, 10, 0.18);
+}
+
+body.canvas-fullscreen:not(.controls-open) .control-panel {
+  display: none;
+}
+
+body.canvas-fullscreen.controls-open .canvas-tools-toggle {
+  background: rgba(157, 47, 36, 0.86);
+  color: #fff;
+}
+
+body.canvas-fullscreen .compact-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+body.canvas-fullscreen .range-field {
+  gap: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+body.canvas-fullscreen .range-field span,
+body.canvas-fullscreen .field span,
+body.canvas-fullscreen .toggle span,
+body.canvas-fullscreen .position-panel > span {
+  font-size: 11px;
+}
+
+body.canvas-fullscreen input[type="range"] {
+  height: 22px;
+}
+
+body.canvas-fullscreen .position-panel {
+  gap: 5px;
+  padding: 7px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+body.canvas-fullscreen .position-grid {
+  gap: 5px;
+}
+
+body.canvas-fullscreen .position-grid button {
+  min-height: 29px;
+  border-radius: 7px;
+  padding: 0 6px;
+}
+
+body.canvas-fullscreen .color-grid {
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+body.canvas-fullscreen input[type="color"] {
+  height: 32px;
+}
+
+body.canvas-fullscreen .toggle {
+  min-height: 32px;
+  padding: 5px;
 }
 
 body.canvas-fullscreen .actions {

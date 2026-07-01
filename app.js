@@ -98,6 +98,7 @@ const els = {
   fontUpload: document.querySelector("#fontUpload"),
   previewFrame: document.querySelector("#previewFrame"),
   fullscreenToggle: document.querySelector("#fullscreenToggle"),
+  canvasToolsToggle: document.querySelector("#canvasToolsToggle"),
   mainCanvas: document.querySelector("#mainCanvas"),
   gallery: document.querySelector("#fontGallery"),
   fontStatus: document.querySelector("#fontStatus"),
@@ -579,8 +580,29 @@ function bindEvents() {
   els.textInput.addEventListener("input", scheduleRender);
 
   els.fullscreenToggle.addEventListener("click", () => {
-    document.body.classList.toggle("canvas-fullscreen");
+    const willEnter = !document.body.classList.contains("canvas-fullscreen");
+    document.body.classList.toggle("canvas-fullscreen", willEnter);
+    document.body.classList.remove("controls-open");
+    els.canvasToolsToggle.setAttribute("aria-pressed", "false");
     window.setTimeout(updateMain, 120);
+  });
+
+  els.canvasToolsToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = document.body.classList.toggle("controls-open");
+    els.canvasToolsToggle.setAttribute("aria-pressed", String(isOpen));
+  });
+
+  els.previewFrame.addEventListener("click", (event) => {
+    if (
+      document.body.classList.contains("canvas-fullscreen") &&
+      document.body.classList.contains("controls-open") &&
+      !event.target.closest("#fullscreenToggle") &&
+      !event.target.closest("#canvasToolsToggle")
+    ) {
+      document.body.classList.remove("controls-open");
+      els.canvasToolsToggle.setAttribute("aria-pressed", "false");
+    }
   });
 
   [els.fontSize, els.lineHeight, els.padding, els.letterSpacing].forEach((input) => {
