@@ -16,95 +16,96 @@
   <body>
     <main class="app">
       <section id="previewPage" class="page active" aria-label="生成与预览">
-        <header class="topbar">
+        <header class="hero-bar">
           <div>
+            <p class="eyebrow">Tibetan Type Studio</p>
             <h1>藏文字体图片生成器</h1>
-            <p>输入文字，选择字体，在线生成 PNG。</p>
           </div>
-          <button id="openLibraryTop" type="button" class="small-button">字体库</button>
+          <button id="openLibraryTop" type="button" class="font-icon-button" title="选择字体" aria-label="选择字体">
+            ཨ
+          </button>
         </header>
 
-        <section class="panel editor-panel">
-          <label class="field">
-            <span>藏文内容</span>
+        <section class="preview-panel">
+          <div class="preview-meta">
+            <span id="fontStatus">正在加载网页字体</span>
+            <span>拖动预览框右下角调整画布大小</span>
+          </div>
+          <div id="previewFrame" class="preview-frame">
+            <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
+          </div>
+          <div class="actions">
+            <button id="downloadSelected" type="button">下载当前 PNG</button>
+            <button id="refresh" type="button" class="secondary">刷新预览</button>
+          </div>
+        </section>
+
+        <section class="control-panel">
+          <label class="field text-field">
+            <span>输入文字</span>
             <textarea id="textInput" spellcheck="false">བོད་ཡིག་གི་ཡིག་གཟུགས་དཔེ་སྟོན།</textarea>
           </label>
 
-          <label class="field">
-            <span>当前字体</span>
+          <label class="sr-only">
+            当前字体
             <select id="fontSelect"></select>
           </label>
 
-          <div class="grid two">
-            <label class="field">
-              <span>字号</span>
-              <input id="fontSize" type="number" min="16" max="220" value="72" />
+          <div class="compact-grid">
+            <label class="range-field">
+              <span>字号 <output id="fontSizeValue">72</output></span>
+              <input id="fontSize" type="range" min="16" max="180" step="1" value="72" />
             </label>
-            <label class="field">
-              <span>留白</span>
-              <input id="padding" type="number" min="0" max="180" value="48" />
+            <label class="range-field">
+              <span>留白 <output id="paddingValue">48</output></span>
+              <input id="padding" type="range" min="0" max="140" step="1" value="48" />
             </label>
-          </div>
-
-          <div class="grid two">
-            <label class="field">
-              <span>行距</span>
-              <input id="lineHeight" type="number" min="0.8" max="2.4" step="0.05" value="1.35" />
-            </label>
-            <label class="toggle">
-              <input id="transparentBackground" type="checkbox" />
-              <span>透明背景</span>
+            <label class="range-field">
+              <span>行距 <output id="lineHeightValue">1.35</output></span>
+              <input id="lineHeight" type="range" min="0.9" max="2.2" step="0.05" value="1.35" />
             </label>
           </div>
 
-          <div class="grid two">
+          <div class="compact-grid color-grid">
             <label class="field">
-              <span>文字颜色</span>
+              <span>文字</span>
               <input id="textColor" type="color" value="#121212" />
             </label>
             <label class="field">
-              <span>背景颜色</span>
+              <span>背景</span>
               <input id="backgroundColor" type="color" value="#f8f3e8" />
+            </label>
+            <label class="toggle">
+              <input id="transparentBackground" type="checkbox" />
+              <span>透明</span>
             </label>
           </div>
 
-          <label class="field upload">
-            <span>临时导入字体</span>
-            <input id="fontUpload" type="file" accept=".ttf,.otf,.woff,.woff2" multiple />
-          </label>
-        </section>
-
-        <section class="panel preview-panel">
-          <div class="preview-head">
-            <div>
-              <strong id="currentFontName">加载中</strong>
-              <span id="fontStatus">正在加载网页字体</span>
-            </div>
-            <button id="refresh" type="button" class="small-button">刷新</button>
-          </div>
-
-          <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
-
-          <div class="actions">
-            <button id="downloadSelected" type="button">下载当前 PNG</button>
-            <button id="downloadAll" type="button" class="secondary">批量下载全部</button>
-          </div>
+          <details class="more-panel">
+            <summary>更多</summary>
+            <label class="field upload">
+              <span>临时导入字体</span>
+              <input id="fontUpload" type="file" accept=".ttf,.otf,.woff,.woff2" multiple />
+            </label>
+            <button id="downloadAll" type="button" class="secondary">批量下载全部字体</button>
+          </details>
         </section>
       </section>
 
       <section id="libraryPage" class="page" aria-label="字体库">
-        <header class="topbar">
+        <header class="hero-bar">
           <div>
-            <h1>字体库</h1>
+            <p class="eyebrow">Font Library</p>
+            <h1>选择字体</h1>
             <p id="libraryCount">字体加载中</p>
           </div>
-          <button id="backToPreviewTop" type="button" class="small-button">返回预览</button>
+          <button id="backToPreviewTop" type="button" class="small-button">完成</button>
         </header>
 
-        <section class="panel library-tools">
+        <section class="library-tools">
           <label class="field">
             <span>搜索字体</span>
-            <input id="fontSearch" type="search" placeholder="输入 Qomolangma / Monlam / Uchen..." autocomplete="off" />
+            <input id="fontSearch" type="search" placeholder="Qomolangma / Monlam / Uchen..." autocomplete="off" />
           </label>
         </section>
 
@@ -113,8 +114,8 @@
     </main>
 
     <nav class="bottom-nav" aria-label="页面切换">
-      <button id="navPreview" type="button" class="active">生成预览</button>
-      <button id="navLibrary" type="button">字体选择</button>
+      <button id="navPreview" type="button" class="active">预览</button>
+      <button id="navLibrary" type="button">字体</button>
     </nav>
 
     <script src="./app.js"></script>

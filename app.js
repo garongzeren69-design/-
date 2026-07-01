@@ -85,15 +85,18 @@ const els = {
   fontSelect: document.querySelector("#fontSelect"),
   fontSearch: document.querySelector("#fontSearch"),
   fontSize: document.querySelector("#fontSize"),
+  fontSizeValue: document.querySelector("#fontSizeValue"),
   lineHeight: document.querySelector("#lineHeight"),
+  lineHeightValue: document.querySelector("#lineHeightValue"),
   padding: document.querySelector("#padding"),
+  paddingValue: document.querySelector("#paddingValue"),
   textColor: document.querySelector("#textColor"),
   backgroundColor: document.querySelector("#backgroundColor"),
   transparentBackground: document.querySelector("#transparentBackground"),
   fontUpload: document.querySelector("#fontUpload"),
+  previewFrame: document.querySelector("#previewFrame"),
   mainCanvas: document.querySelector("#mainCanvas"),
   gallery: document.querySelector("#fontGallery"),
-  currentFontName: document.querySelector("#currentFontName"),
   fontStatus: document.querySelector("#fontStatus"),
   libraryCount: document.querySelector("#libraryCount"),
   downloadSelected: document.querySelector("#downloadSelected"),
@@ -135,6 +138,7 @@ let styles = [...bundledStyles, ...onlineStyles];
 let selectedStyleId = styles[0].id;
 let renderToken = 0;
 let galleryTimer = null;
+let frameTimer = null;
 const fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
 function cssFontName(name) {
@@ -143,6 +147,14 @@ function cssFontName(name) {
 
 function getSelectedStyle() {
   return styles.find((style) => style.id === selectedStyleId) || styles[0];
+}
+
+function frameSize() {
+  const rect = els.previewFrame.getBoundingClientRect();
+  return {
+    width: Math.max(260, Math.round(rect.width)),
+    height: Math.max(170, Math.round(rect.height))
+  };
 }
 
 function getSettings(overrides = {}) {
@@ -155,6 +167,12 @@ function getSettings(overrides = {}) {
     backgroundColor: overrides.backgroundColor ?? els.backgroundColor.value,
     transparentBackground: overrides.transparentBackground ?? els.transparentBackground.checked
   };
+}
+
+function updateRangeOutputs() {
+  els.fontSizeValue.textContent = els.fontSize.value;
+  els.paddingValue.textContent = els.padding.value;
+  els.lineHeightValue.textContent = Number(els.lineHeight.value).toFixed(2);
 }
 
 async function waitForStyleFont(style) {
@@ -313,7 +331,8 @@ function paintText(ctx, line, x, y, style) {
 function renderCanvas(canvas, style, options = {}) {
   const settings = getSettings(options.settings);
   const scale = options.scale || window.devicePixelRatio || 1;
-  const width = options.width || 1180;
+  const width = options.width || 900;
+  const height = options.height || 420;
   const maxTextWidth = Math.max(40, width - settings.padding * 2);
   const ctx = canvas.getContext("2d");
   const fontStack = `${style.weight} ${settings.fontSize}px ${cssFontName(style.family)}, "Noto Serif Tibetan", serif`;
@@ -321,11 +340,9 @@ function renderCanvas(canvas, style, options = {}) {
   ctx.font = fontStack;
   const lines = wrapText(ctx, settings.text, maxTextWidth);
   const linePx = settings.fontSize * settings.lineHeight;
-  const height = options.height || Math.max(160, settings.padding * 2 + lines.length * linePx);
 
   canvas.width = Math.ceil(width * scale);
   canvas.height = Math.ceil(height * scale);
-  canvas.style.aspectRatio = `${width} / ${height}`;
 
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, width, height);
@@ -342,21 +359,30 @@ function renderCanvas(canvas, style, options = {}) {
 
   lines.forEach((line, index) => {
     const y = settings.padding + settings.fontSize + index * linePx;
-    paintText(ctx, line, settings.padding, y, style);
+    if (y < height + settings.fontSize) {
+      paintText(ctx, line, settings.padding, y, style);
+    }
   });
 }
 
+function renderMainCanvas(scale = window.devicePixelRatio || 1) {
+  const style = getSelectedStyle();
+  const size = frameSize();
+  renderCanvas(els.mainCanvas, style, { width: size.width, height: size.height, scale });
+  els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+}
+
 function renderSample(canvas, style) {
-  const sampleText = (els.textInput.value.trim() || "བོད་ཡིག").slice(0, 24);
+  const sampleText = (els.textInput.value.trim() || "བོད་ཡིག").slice(0, 28);
   renderCanvas(canvas, style, {
-    width: 220,
-    height: 88,
-    scale: 1.5,
+    width: 420,
+    height: 180,
+    scale: 1.35,
     settings: {
       text: sampleText,
-      fontSize: 32,
-      lineHeight: 1.1,
-      padding: 12,
+      fontSize: 54,
+      lineHeight: 1.05,
+      padding: 22,
       backgroundColor: "#f8f3e8",
       transparentBackground: false
     }
@@ -377,16 +403,15 @@ function downloadCanvas(canvas, style) {
 async function updateMain() {
   const token = ++renderToken;
   const style = getSelectedStyle();
-  els.currentFontName.textContent = style.label;
   els.fontStatus.textContent = "正在加载网页字体";
   els.fontSelect.value = style.id;
   updateActiveCards();
+  updateRangeOutputs();
 
   try {
     await waitForStyleFont(style);
     if (token !== renderToken) return;
-    renderCanvas(els.mainCanvas, style);
-    els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+    renderMainCanvas();
     els.fontStatus.textContent = `${style.source}已加载，可导出 PNG`;
   } catch (error) {
     if (token !== renderToken) return;
@@ -405,6 +430,9 @@ function selectStyle(styleId, options = {}) {
 function updateActiveCards() {
   document.querySelectorAll(".font-card").forEach((card) => {
     card.classList.toggle("active", card.dataset.styleId === selectedStyleId);
+  });
+  document.querySelectorAll(".font-info button").forEach((button) => {
+    button.textContent = button.dataset.styleId === selectedStyleId ? "已选" : "选择";
   });
 }
 
@@ -425,21 +453,22 @@ function buildGallery() {
     card.dataset.styleId = style.id;
     card.classList.toggle("active", style.id === selectedStyleId);
 
+    const sample = document.createElement("div");
+    sample.className = "font-sample";
+    const canvas = document.createElement("canvas");
+    sample.append(canvas);
+
     const info = document.createElement("div");
     info.className = "font-info";
     const title = document.createElement("strong");
     const status = document.createElement("small");
+    const choose = document.createElement("button");
     title.textContent = style.label;
     status.textContent = "加载中";
-    info.append(title, status);
-
-    const sample = document.createElement("div");
-    sample.className = "font-sample";
-    const canvas = document.createElement("canvas");
-    const choose = document.createElement("button");
     choose.type = "button";
-    choose.textContent = style.id === selectedStyleId ? "已选择" : "选择";
-    sample.append(canvas, choose);
+    choose.dataset.styleId = style.id;
+    choose.textContent = style.id === selectedStyleId ? "已选" : "选择";
+    info.append(title, status, choose);
 
     card.addEventListener("click", () => selectStyle(style.id, { switchToPreview: true }));
     choose.addEventListener("click", (event) => {
@@ -447,7 +476,7 @@ function buildGallery() {
       selectStyle(style.id, { switchToPreview: true });
     });
 
-    card.append(info, sample);
+    card.append(sample, info);
     els.gallery.append(card);
     renderSample(canvas, style);
 
@@ -493,7 +522,7 @@ async function addUploadedFonts(files) {
 function scheduleRender() {
   updateMain();
   window.clearTimeout(galleryTimer);
-  galleryTimer = window.setTimeout(buildGallery, 140);
+  galleryTimer = window.setTimeout(buildGallery, 160);
 }
 
 function bindEvents() {
@@ -502,14 +531,18 @@ function bindEvents() {
   els.openLibraryTop.addEventListener("click", () => switchPage("library"));
   els.backToPreviewTop.addEventListener("click", () => switchPage("preview"));
 
-  ["input", "change"].forEach((eventName) => {
-    els.textInput.addEventListener(eventName, scheduleRender);
-    els.fontSize.addEventListener(eventName, updateMain);
-    els.lineHeight.addEventListener(eventName, updateMain);
-    els.padding.addEventListener(eventName, updateMain);
-    els.textColor.addEventListener(eventName, scheduleRender);
-    els.backgroundColor.addEventListener(eventName, scheduleRender);
-    els.transparentBackground.addEventListener(eventName, scheduleRender);
+  els.textInput.addEventListener("input", scheduleRender);
+
+  [els.fontSize, els.lineHeight, els.padding].forEach((input) => {
+    input.addEventListener("input", () => {
+      updateRangeOutputs();
+      updateMain();
+    });
+  });
+
+  [els.textColor, els.backgroundColor, els.transparentBackground].forEach((input) => {
+    input.addEventListener("input", scheduleRender);
+    input.addEventListener("change", scheduleRender);
   });
 
   els.fontSearch.addEventListener("input", buildGallery);
@@ -528,23 +561,34 @@ function bindEvents() {
 
   els.downloadSelected.addEventListener("click", async () => {
     const style = getSelectedStyle();
+    const size = frameSize();
     await waitForStyleFont(style);
-    renderCanvas(els.mainCanvas, style, { scale: 2 });
+    renderCanvas(els.mainCanvas, style, { width: size.width, height: size.height, scale: 3 });
     downloadCanvas(els.mainCanvas, style);
-    renderCanvas(els.mainCanvas, style);
+    renderMainCanvas();
   });
 
   els.downloadAll.addEventListener("click", async () => {
+    const size = frameSize();
     for (const style of styles) {
       await waitForStyleFont(style);
       const canvas = document.createElement("canvas");
-      renderCanvas(canvas, style, { scale: 2 });
+      renderCanvas(canvas, style, { width: size.width, height: size.height, scale: 3 });
       downloadCanvas(canvas, style);
     }
   });
+
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(() => {
+      window.clearTimeout(frameTimer);
+      frameTimer = window.setTimeout(updateMain, 80);
+    });
+    observer.observe(els.previewFrame);
+  }
 }
 
 fillFontSelect();
 bindEvents();
+updateRangeOutputs();
 updateMain();
 buildGallery();
