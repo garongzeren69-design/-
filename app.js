@@ -1,3 +1,93 @@
+const bundledFontFiles = [
+  "amdo_classic_3.ttf",
+  "ctrc-betsu.ttf",
+  "ctrc-bt.ttf",
+  "ctrc-drutsa.ttf",
+  "ctrc-ht.ttf",
+  "ctrc-tsumachu.ttf",
+  "ctrc-uchen.ttf",
+  "ddc_rinzin.ttf",
+  "ddc_uchen.ttf",
+  "himalaya.ttf",
+  "jomolhari-alpha3c-0605331.ttf",
+  "jomolhari-id-a3d.ttf",
+  "monlam_sans_serifbold.ttf",
+  "monlam_uni_chouk.ttf",
+  "monlam_uni_choukmatik.ttf",
+  "monlam_uni_dutsa1.ttf",
+  "monlam_uni_dutsa2.ttf",
+  "monlam_uni_ochan1.ttf",
+  "monlam_uni_ouchan2.ttf",
+  "monlam_uni_ouchan3.ttf",
+  "monlam_uni_ouchan4.ttf",
+  "monlam_uni_ouchan5.ttf",
+  "monlam_uni_paytsik.ttf",
+  "monlam_uni_tikrang.ttf",
+  "monlam_uni_tiktong.ttf",
+  "perfect_unicode.ttf",
+  "Qomolangma-Art.ttf",
+  "Qomolangma-Betsu.ttf",
+  "Qomolangma-Chuyig.ttf",
+  "Qomolangma-Drutsa.ttf",
+  "Qomolangma-Dunhuang.ttf",
+  "Qomolangma-Edict.ttf",
+  "Qomolangma-Horyig.ttf",
+  "Qomolangma-Subtitle.ttf",
+  "Qomolangma-Title.ttf",
+  "Qomolangma-Tsumachu.ttf",
+  "Qomolangma-Tsuring.ttf",
+  "Qomolangma-Tsutong.ttf",
+  "Qomolangma-UchenSarchen.ttf",
+  "Qomolangma-UchenSarchung.ttf",
+  "Qomolangma-UchenSuring.ttf",
+  "Qomolangma-UchenSutung.ttf",
+  "Qomolangma-Woodblock.ttf",
+  "tashi.ttf",
+  "the_script_of_zhangzhung_smar.ttf",
+  "tib-usunicode.ttf",
+  "tibetanmachineunialpha.ttf",
+  "tibetanmachineweb.ttf",
+  "tibetansambhotayigchung.ttf",
+  "tibetantsugring.otf",
+  "tibetanyigchung098.otf",
+  "tsuig_03.ttf",
+  "uchen.ttf",
+  "wangdi.ttf",
+  "wangdi_29.ttf",
+  "嘟栢郊嘟戉紜嘟∴讲嘟傕紜嘟傕綗嘟脆絺.ttf"
+];
+
+function slugify(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function prettyFontName(fileName) {
+  const baseName = fileName.replace(/\.(ttf|otf|woff2?)$/i, "");
+  return baseName
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/\bCtrc\b/g, "CTRC")
+    .replace(/\bDdc\b/g, "DDC");
+}
+
+function fontUrl(fileName) {
+  return `./${encodeURIComponent("字体")}/${encodeURIComponent(fileName)}`;
+}
+
+const bundledStyles = bundledFontFiles.map((fileName, index) => {
+  const label = prettyFontName(fileName);
+  const weight = /bold/i.test(fileName) ? 700 : 400;
+  return {
+    id: `bundled-${index}-${slugify(fileName) || index}`,
+    label,
+    family: `Bundled Tibetan ${index}`,
+    weight,
+    source: "站点内置字体",
+    effect: "plain",
+    url: fontUrl(fileName)
+  };
+});
+
 const onlineStyles = [
   { id: "noto-thin", label: "Noto Serif Tibetan Thin", family: "Noto Serif Tibetan", weight: 100, source: "在线字体", effect: "plain" },
   { id: "noto-light", label: "Noto Serif Tibetan Light", family: "Noto Serif Tibetan", weight: 300, source: "在线字体", effect: "plain" },
@@ -34,8 +124,8 @@ const els = {
   refresh: document.querySelector("#refresh")
 };
 
-let styles = [...onlineStyles];
-let selectedStyleId = onlineStyles[2].id;
+let styles = [...bundledStyles, ...onlineStyles];
+let selectedStyleId = styles[0].id;
 let fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
 function cssFontName(name) {
@@ -59,6 +149,22 @@ function getSettings() {
 }
 
 async function waitForStyleFont(style) {
+  if (style.url && !style.loadPromise) {
+    const face = new FontFace(style.family, `url("${style.url}")`, {
+      display: "swap",
+      weight: String(style.weight)
+    });
+    style.loadPromise = face.load().then((loadedFace) => {
+      document.fonts.add(loadedFace);
+      return loadedFace;
+    });
+  }
+
+  if (style.loadPromise) {
+    await style.loadPromise;
+    return;
+  }
+
   await fontReady;
   if (document.fonts?.load) {
     await document.fonts.load(`${style.weight} 48px ${cssFontName(style.family)}`, "བོད");
@@ -237,14 +343,14 @@ function downloadCanvas(canvas, style) {
 async function updateMain() {
   const style = getSelectedStyle();
   els.currentFontName.textContent = style.label;
-  els.fontStatus.textContent = "正在加载在线字体";
+  els.fontStatus.textContent = "正在加载网页字体";
   await waitForStyleFont(style);
   renderCanvas(els.mainCanvas, style);
   els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
-  els.fontStatus.textContent = `${style.source}已加载，可在线导出 PNG`;
+  els.fontStatus.textContent = `${style.source}已加载，可导出 PNG`;
 }
 
-async function buildGallery() {
+function buildGallery() {
   els.gallery.innerHTML = "";
 
   for (const style of styles) {
@@ -255,11 +361,10 @@ async function buildGallery() {
     const title = document.createElement("strong");
     const status = document.createElement("small");
     title.textContent = style.label;
-    status.textContent = style.source;
+    status.textContent = "加载中";
     header.append(title, status);
 
     const canvas = document.createElement("canvas");
-    await waitForStyleFont(style);
     renderCanvas(canvas, style, { width: 760, scale: 1.5 });
     canvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
 
@@ -288,6 +393,16 @@ async function buildGallery() {
 
     card.append(header, canvas, footer);
     els.gallery.append(card);
+
+    waitForStyleFont(style)
+      .then(() => {
+        renderCanvas(canvas, style, { width: 760, scale: 1.5 });
+        canvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+        status.textContent = style.source;
+      })
+      .catch(() => {
+        status.textContent = "加载失败";
+      });
   }
 }
 
@@ -316,7 +431,7 @@ async function addUploadedFonts(files) {
   }
   fillFontSelect();
   await updateMain();
-  await buildGallery();
+  buildGallery();
 }
 
 function scheduleRender() {
