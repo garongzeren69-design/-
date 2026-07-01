@@ -88,6 +88,8 @@ const els = {
   fontSizeValue: document.querySelector("#fontSizeValue"),
   lineHeight: document.querySelector("#lineHeight"),
   lineHeightValue: document.querySelector("#lineHeightValue"),
+  letterSpacing: document.querySelector("#letterSpacing"),
+  letterSpacingValue: document.querySelector("#letterSpacingValue"),
   padding: document.querySelector("#padding"),
   paddingValue: document.querySelector("#paddingValue"),
   textColor: document.querySelector("#textColor"),
@@ -95,6 +97,7 @@ const els = {
   transparentBackground: document.querySelector("#transparentBackground"),
   fontUpload: document.querySelector("#fontUpload"),
   previewFrame: document.querySelector("#previewFrame"),
+  fullscreenToggle: document.querySelector("#fullscreenToggle"),
   mainCanvas: document.querySelector("#mainCanvas"),
   gallery: document.querySelector("#fontGallery"),
   fontStatus: document.querySelector("#fontStatus"),
@@ -139,6 +142,10 @@ let selectedStyleId = styles[0].id;
 let renderToken = 0;
 let galleryTimer = null;
 let frameTimer = null;
+let alignX = "center";
+let alignY = "middle";
+let pinchStartDistance = 0;
+let pinchStartSize = 72;
 const fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
 function cssFontName(name) {
@@ -162,6 +169,7 @@ function getSettings(overrides = {}) {
     text: overrides.text ?? (els.textInput.value.trim() || "བོད་ཡིག"),
     fontSize: overrides.fontSize ?? (Number(els.fontSize.value) || 72),
     lineHeight: overrides.lineHeight ?? (Number(els.lineHeight.value) || 1.35),
+    letterSpacing: overrides.letterSpacing ?? (Number(els.letterSpacing.value) || 0),
     padding: overrides.padding ?? (Number(els.padding.value) || 48),
     textColor: overrides.textColor ?? els.textColor.value,
     backgroundColor: overrides.backgroundColor ?? els.backgroundColor.value,
@@ -173,6 +181,7 @@ function updateRangeOutputs() {
   els.fontSizeValue.textContent = els.fontSize.value;
   els.paddingValue.textContent = els.padding.value;
   els.lineHeightValue.textContent = Number(els.lineHeight.value).toFixed(2);
+  els.letterSpacingValue.textContent = els.letterSpacing.value;
 }
 
 async function waitForStyleFont(style) {
@@ -242,6 +251,13 @@ function wrapText(ctx, text, maxWidth) {
   }
 
   return lines;
+}
+
+function measureLine(ctx, line, letterSpacing) {
+  if (!letterSpacing) return ctx.measureText(line).width;
+  return [...line].reduce((width, char, index, chars) => {
+    return width + ctx.measureText(char).width + (index < chars.length - 1 ? letterSpacing : 0);
+  }, 0);
 }
 
 function applyEffect(ctx, style, settings, width, height) {
@@ -328,6 +344,19 @@ function paintText(ctx, line, x, y, style) {
   ctx.fillText(line, x, y);
 }
 
+function paintTrackedText(ctx, line, x, y, style, letterSpacing) {
+  if (!letterSpacing) {
+    paintText(ctx, line, x, y, style);
+    return;
+  }
+
+  let cursor = x;
+  for (const char of [...line]) {
+    paintText(ctx, char, cursor, y, style);
+    cursor += ctx.measureText(char).width + letterSpacing;
+  }
+}
+
 function renderCanvas(canvas, style, options = {}) {
   const settings = getSettings(options.settings);
   const scale = options.scale || window.devicePixelRatio || 1;
@@ -357,10 +386,25 @@ function renderCanvas(canvas, style, options = {}) {
   ctx.font = fontStack;
   applyEffect(ctx, style, settings, width, height);
 
+  const blockHeight = lines.length * linePx;
+  const startY =
+    alignY === "middle"
+      ? Math.max(settings.padding, (height - blockHeight) / 2) + settings.fontSize
+      : alignY === "bottom"
+        ? Math.max(settings.padding, height - settings.padding - blockHeight) + settings.fontSize
+        : settings.padding + settings.fontSize;
+
   lines.forEach((line, index) => {
-    const y = settings.padding + settings.fontSize + index * linePx;
+    const lineWidth = measureLine(ctx, line, settings.letterSpacing);
+    const x =
+      alignX === "center"
+        ? (width - lineWidth) / 2
+        : alignX === "right"
+          ? width - settings.padding - lineWidth
+          : settings.padding;
+    const y = startY + index * linePx;
     if (y < height + settings.fontSize) {
-      paintText(ctx, line, settings.padding, y, style);
+      paintTrackedText(ctx, line, Math.max(settings.padding, x), y, style, settings.letterSpacing);
     }
   });
 }
@@ -382,6 +426,7 @@ function renderSample(canvas, style) {
       text: sampleText,
       fontSize: 54,
       lineHeight: 1.05,
+      letterSpacing: 0,
       padding: 22,
       backgroundColor: "#f8f3e8",
       transparentBackground: false
@@ -533,9 +578,32 @@ function bindEvents() {
 
   els.textInput.addEventListener("input", scheduleRender);
 
-  [els.fontSize, els.lineHeight, els.padding].forEach((input) => {
+  els.fullscreenToggle.addEventListener("click", () => {
+    document.body.classList.toggle("canvas-fullscreen");
+    window.setTimeout(updateMain, 120);
+  });
+
+  [els.fontSize, els.lineHeight, els.padding, els.letterSpacing].forEach((input) => {
     input.addEventListener("input", () => {
       updateRangeOutputs();
+      updateMain();
+    });
+  });
+
+  document.querySelectorAll("[data-align-x]").forEach((button) => {
+    button.addEventListener("click", () => {
+      alignX = button.dataset.alignX;
+      document.querySelectorAll("[data-align-x]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      updateMain();
+    });
+  });
+
+  document.querySelectorAll("[data-align-y]").forEach((button) => {
+    button.addEventListener("click", () => {
+      alignY = button.dataset.alignY;
+      document.querySelectorAll("[data-align-y]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
       updateMain();
     });
   });
@@ -585,6 +653,38 @@ function bindEvents() {
     });
     observer.observe(els.previewFrame);
   }
+
+  els.previewFrame.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length === 2) {
+        pinchStartDistance = touchDistance(event.touches);
+        pinchStartSize = Number(els.fontSize.value);
+      }
+    },
+    { passive: true }
+  );
+
+  els.previewFrame.addEventListener(
+    "touchmove",
+    (event) => {
+      if (event.touches.length === 2 && pinchStartDistance) {
+        event.preventDefault();
+        const ratio = touchDistance(event.touches) / pinchStartDistance;
+        const nextSize = Math.max(16, Math.min(180, Math.round(pinchStartSize * ratio)));
+        els.fontSize.value = String(nextSize);
+        updateRangeOutputs();
+        updateMain();
+      }
+    },
+    { passive: false }
+  );
+}
+
+function touchDistance(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.hypot(dx, dy);
 }
 
 fillFontSelect();

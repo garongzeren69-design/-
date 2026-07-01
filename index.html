@@ -32,6 +32,9 @@
             <span>拖动预览框右下角调整画布大小</span>
           </div>
           <div id="previewFrame" class="preview-frame">
+            <button id="fullscreenToggle" type="button" class="canvas-corner-button" title="全屏画布" aria-label="全屏画布">
+              ⛶
+            </button>
             <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
           </div>
           <div class="actions">
@@ -64,6 +67,22 @@
               <span>行距 <output id="lineHeightValue">1.35</output></span>
               <input id="lineHeight" type="range" min="0.9" max="2.2" step="0.05" value="1.35" />
             </label>
+            <label class="range-field">
+              <span>字距 <output id="letterSpacingValue">0</output></span>
+              <input id="letterSpacing" type="range" min="0" max="28" step="1" value="0" />
+            </label>
+          </div>
+
+          <div class="position-panel">
+            <span>位置</span>
+            <div class="position-grid" aria-label="文字位置">
+              <button type="button" data-align-x="left">左</button>
+              <button type="button" data-align-x="center" class="active">中</button>
+              <button type="button" data-align-x="right">右</button>
+              <button type="button" data-align-y="top">上</button>
+              <button type="button" data-align-y="middle" class="active">中</button>
+              <button type="button" data-align-y="bottom">下</button>
+            </div>
           </div>
 
           <div class="compact-grid color-grid">
