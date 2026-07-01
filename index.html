@@ -2,11 +2,8 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="在线藏文字体图片生成器，支持手机和电脑使用，可导出透明背景 PNG。"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="在线藏文字体图片生成器，支持手机和电脑使用，可导出透明背景 PNG。" />
     <title>藏文字体图片生成器</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,26 +15,34 @@
   </head>
   <body>
     <main class="app">
-      <section class="workspace" aria-label="藏文字体图片生成器">
-        <aside class="panel controls">
-          <div class="brand">
+      <section id="previewPage" class="page active" aria-label="生成与预览">
+        <header class="topbar">
+          <div>
             <h1>藏文字体图片生成器</h1>
-            <p>字体随网页一起上线，手机和电脑无需安装字体即可导出 PNG。</p>
+            <p>输入文字，选择字体，在线生成 PNG。</p>
           </div>
+          <button id="openLibraryTop" type="button" class="small-button">字体库</button>
+        </header>
 
+        <section class="panel editor-panel">
           <label class="field">
             <span>藏文内容</span>
             <textarea id="textInput" spellcheck="false">བོད་ཡིག་གི་ཡིག་གཟུགས་དཔེ་སྟོན།</textarea>
           </label>
 
+          <label class="field">
+            <span>当前字体</span>
+            <select id="fontSelect"></select>
+          </label>
+
           <div class="grid two">
-            <label class="field">
-              <span>在线可用字体</span>
-              <select id="fontSelect"></select>
-            </label>
             <label class="field">
               <span>字号</span>
               <input id="fontSize" type="number" min="16" max="220" value="72" />
+            </label>
+            <label class="field">
+              <span>留白</span>
+              <input id="padding" type="number" min="0" max="180" value="48" />
             </label>
           </div>
 
@@ -46,9 +51,9 @@
               <span>行距</span>
               <input id="lineHeight" type="number" min="0.8" max="2.4" step="0.05" value="1.35" />
             </label>
-            <label class="field">
-              <span>留白</span>
-              <input id="padding" type="number" min="0" max="180" value="48" />
+            <label class="toggle">
+              <input id="transparentBackground" type="checkbox" />
+              <span>透明背景</span>
             </label>
           </div>
 
@@ -63,41 +68,54 @@
             </label>
           </div>
 
-          <label class="toggle">
-            <input id="transparentBackground" type="checkbox" />
-            <span>导出透明背景 PNG</span>
-          </label>
-
           <label class="field upload">
-            <span>导入自己的字体文件</span>
+            <span>临时导入字体</span>
             <input id="fontUpload" type="file" accept=".ttf,.otf,.woff,.woff2" multiple />
           </label>
+        </section>
 
-          <div class="actions">
-            <button id="downloadSelected" type="button">下载当前 PNG</button>
-            <button id="downloadAll" type="button" class="secondary">批量下载全部样式</button>
-          </div>
-        </aside>
-
-        <section class="preview-area">
-          <div class="toolbar">
+        <section class="panel preview-panel">
+          <div class="preview-head">
             <div>
-              <strong id="currentFontName">Noto Serif Tibetan Regular</strong>
+              <strong id="currentFontName">加载中</strong>
               <span id="fontStatus">正在加载网页字体</span>
             </div>
-            <button id="refresh" type="button" title="刷新预览">刷新</button>
+            <button id="refresh" type="button" class="small-button">刷新</button>
           </div>
 
           <canvas id="mainCanvas" aria-label="当前字体图片预览"></canvas>
 
-          <div class="gallery-head">
-            <h2>字体预览</h2>
-            <span>这些字体会随站点加载，导出图片效果与预览一致</span>
+          <div class="actions">
+            <button id="downloadSelected" type="button">下载当前 PNG</button>
+            <button id="downloadAll" type="button" class="secondary">批量下载全部</button>
           </div>
-          <div id="fontGallery" class="gallery"></div>
         </section>
       </section>
+
+      <section id="libraryPage" class="page" aria-label="字体库">
+        <header class="topbar">
+          <div>
+            <h1>字体库</h1>
+            <p id="libraryCount">字体加载中</p>
+          </div>
+          <button id="backToPreviewTop" type="button" class="small-button">返回预览</button>
+        </header>
+
+        <section class="panel library-tools">
+          <label class="field">
+            <span>搜索字体</span>
+            <input id="fontSearch" type="search" placeholder="输入 Qomolangma / Monlam / Uchen..." autocomplete="off" />
+          </label>
+        </section>
+
+        <div id="fontGallery" class="font-list"></div>
+      </section>
     </main>
+
+    <nav class="bottom-nav" aria-label="页面切换">
+      <button id="navPreview" type="button" class="active">生成预览</button>
+      <button id="navLibrary" type="button">字体选择</button>
+    </nav>
 
     <script src="./app.js"></script>
   </body>

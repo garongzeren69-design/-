@@ -57,6 +57,50 @@ const bundledFontFiles = [
   "嘟栢郊嘟戉紜嘟∴讲嘟傕紜嘟傕綗嘟脆絺.ttf"
 ];
 
+const onlineStyles = [
+  { id: "noto-thin", label: "Noto Serif Tibetan Thin", family: "Noto Serif Tibetan", weight: 100, source: "在线字体", effect: "plain" },
+  { id: "noto-light", label: "Noto Serif Tibetan Light", family: "Noto Serif Tibetan", weight: 300, source: "在线字体", effect: "plain" },
+  { id: "noto-regular", label: "Noto Serif Tibetan Regular", family: "Noto Serif Tibetan", weight: 400, source: "在线字体", effect: "plain" },
+  { id: "noto-semibold", label: "Noto Serif Tibetan Semibold", family: "Noto Serif Tibetan", weight: 600, source: "在线字体", effect: "plain" },
+  { id: "noto-bold", label: "Noto Serif Tibetan Bold", family: "Noto Serif Tibetan", weight: 700, source: "在线字体", effect: "plain" },
+  { id: "noto-black", label: "Noto Serif Tibetan Black", family: "Noto Serif Tibetan", weight: 900, source: "在线字体", effect: "plain" },
+  { id: "jomolhari-regular", label: "Jomolhari Regular", family: "Jomolhari", weight: 400, source: "在线字体", effect: "plain" },
+  { id: "jomolhari-ink", label: "Jomolhari Ink", family: "Jomolhari", weight: 400, source: "在线样式", effect: "ink" },
+  { id: "noto-outline", label: "Noto Serif Outline", family: "Noto Serif Tibetan", weight: 700, source: "在线样式", effect: "outline" },
+  { id: "noto-gold", label: "Noto Serif Gold", family: "Noto Serif Tibetan", weight: 800, source: "在线样式", effect: "gold" },
+  { id: "noto-shadow", label: "Noto Serif Shadow", family: "Noto Serif Tibetan", weight: 700, source: "在线样式", effect: "shadow" },
+  { id: "noto-red-seal", label: "Noto Serif Red Seal", family: "Noto Serif Tibetan", weight: 900, source: "在线样式", effect: "seal" },
+  { id: "noto-ice", label: "Noto Serif Ice Blue", family: "Noto Serif Tibetan", weight: 500, source: "在线样式", effect: "ice" },
+  { id: "noto-night", label: "Noto Serif Night", family: "Noto Serif Tibetan", weight: 600, source: "在线样式", effect: "night" }
+];
+
+const els = {
+  previewPage: document.querySelector("#previewPage"),
+  libraryPage: document.querySelector("#libraryPage"),
+  navPreview: document.querySelector("#navPreview"),
+  navLibrary: document.querySelector("#navLibrary"),
+  openLibraryTop: document.querySelector("#openLibraryTop"),
+  backToPreviewTop: document.querySelector("#backToPreviewTop"),
+  textInput: document.querySelector("#textInput"),
+  fontSelect: document.querySelector("#fontSelect"),
+  fontSearch: document.querySelector("#fontSearch"),
+  fontSize: document.querySelector("#fontSize"),
+  lineHeight: document.querySelector("#lineHeight"),
+  padding: document.querySelector("#padding"),
+  textColor: document.querySelector("#textColor"),
+  backgroundColor: document.querySelector("#backgroundColor"),
+  transparentBackground: document.querySelector("#transparentBackground"),
+  fontUpload: document.querySelector("#fontUpload"),
+  mainCanvas: document.querySelector("#mainCanvas"),
+  gallery: document.querySelector("#fontGallery"),
+  currentFontName: document.querySelector("#currentFontName"),
+  fontStatus: document.querySelector("#fontStatus"),
+  libraryCount: document.querySelector("#libraryCount"),
+  downloadSelected: document.querySelector("#downloadSelected"),
+  downloadAll: document.querySelector("#downloadAll"),
+  refresh: document.querySelector("#refresh")
+};
+
 function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -76,57 +120,22 @@ function fontUrl(fileName) {
 
 const bundledStyles = bundledFontFiles.map((fileName, index) => {
   const label = prettyFontName(fileName);
-  const weight = /bold/i.test(fileName) ? 700 : 400;
   return {
     id: `bundled-${index}-${slugify(fileName) || index}`,
     label,
     family: `Bundled Tibetan ${index}`,
-    weight,
+    weight: /bold/i.test(fileName) ? 700 : 400,
     source: "站点内置字体",
     effect: "plain",
     url: fontUrl(fileName)
   };
 });
 
-const onlineStyles = [
-  { id: "noto-thin", label: "Noto Serif Tibetan Thin", family: "Noto Serif Tibetan", weight: 100, source: "在线字体", effect: "plain" },
-  { id: "noto-light", label: "Noto Serif Tibetan Light", family: "Noto Serif Tibetan", weight: 300, source: "在线字体", effect: "plain" },
-  { id: "noto-regular", label: "Noto Serif Tibetan Regular", family: "Noto Serif Tibetan", weight: 400, source: "在线字体", effect: "plain" },
-  { id: "noto-semibold", label: "Noto Serif Tibetan Semibold", family: "Noto Serif Tibetan", weight: 600, source: "在线字体", effect: "plain" },
-  { id: "noto-bold", label: "Noto Serif Tibetan Bold", family: "Noto Serif Tibetan", weight: 700, source: "在线字体", effect: "plain" },
-  { id: "noto-black", label: "Noto Serif Tibetan Black", family: "Noto Serif Tibetan", weight: 900, source: "在线字体", effect: "plain" },
-  { id: "jomolhari-regular", label: "Jomolhari Regular", family: "Jomolhari", weight: 400, source: "在线字体", effect: "plain" },
-  { id: "jomolhari-ink", label: "Jomolhari Ink", family: "Jomolhari", weight: 400, source: "在线字体样式", effect: "ink" },
-  { id: "noto-outline", label: "Noto Serif Outline", family: "Noto Serif Tibetan", weight: 700, source: "在线字体样式", effect: "outline" },
-  { id: "noto-gold", label: "Noto Serif Gold", family: "Noto Serif Tibetan", weight: 800, source: "在线字体样式", effect: "gold" },
-  { id: "noto-shadow", label: "Noto Serif Shadow", family: "Noto Serif Tibetan", weight: 700, source: "在线字体样式", effect: "shadow" },
-  { id: "noto-red-seal", label: "Noto Serif Red Seal", family: "Noto Serif Tibetan", weight: 900, source: "在线字体样式", effect: "seal" },
-  { id: "noto-ice", label: "Noto Serif Ice Blue", family: "Noto Serif Tibetan", weight: 500, source: "在线字体样式", effect: "ice" },
-  { id: "noto-night", label: "Noto Serif Night", family: "Noto Serif Tibetan", weight: 600, source: "在线字体样式", effect: "night" }
-];
-
-const els = {
-  textInput: document.querySelector("#textInput"),
-  fontSelect: document.querySelector("#fontSelect"),
-  fontSize: document.querySelector("#fontSize"),
-  lineHeight: document.querySelector("#lineHeight"),
-  padding: document.querySelector("#padding"),
-  textColor: document.querySelector("#textColor"),
-  backgroundColor: document.querySelector("#backgroundColor"),
-  transparentBackground: document.querySelector("#transparentBackground"),
-  fontUpload: document.querySelector("#fontUpload"),
-  mainCanvas: document.querySelector("#mainCanvas"),
-  gallery: document.querySelector("#fontGallery"),
-  currentFontName: document.querySelector("#currentFontName"),
-  fontStatus: document.querySelector("#fontStatus"),
-  downloadSelected: document.querySelector("#downloadSelected"),
-  downloadAll: document.querySelector("#downloadAll"),
-  refresh: document.querySelector("#refresh")
-};
-
 let styles = [...bundledStyles, ...onlineStyles];
 let selectedStyleId = styles[0].id;
-let fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
+let renderToken = 0;
+let galleryTimer = null;
+const fontReady = document.fonts ? document.fonts.ready : Promise.resolve();
 
 function cssFontName(name) {
   return `"${name.replace(/"/g, '\\"')}"`;
@@ -136,15 +145,15 @@ function getSelectedStyle() {
   return styles.find((style) => style.id === selectedStyleId) || styles[0];
 }
 
-function getSettings() {
+function getSettings(overrides = {}) {
   return {
-    text: els.textInput.value.trim() || "བོད་ཡིག",
-    fontSize: Number(els.fontSize.value) || 72,
-    lineHeight: Number(els.lineHeight.value) || 1.35,
-    padding: Number(els.padding.value) || 48,
-    textColor: els.textColor.value,
-    backgroundColor: els.backgroundColor.value,
-    transparentBackground: els.transparentBackground.checked
+    text: overrides.text ?? (els.textInput.value.trim() || "བོད་ཡིག"),
+    fontSize: overrides.fontSize ?? (Number(els.fontSize.value) || 72),
+    lineHeight: overrides.lineHeight ?? (Number(els.lineHeight.value) || 1.35),
+    padding: overrides.padding ?? (Number(els.padding.value) || 48),
+    textColor: overrides.textColor ?? els.textColor.value,
+    backgroundColor: overrides.backgroundColor ?? els.backgroundColor.value,
+    transparentBackground: overrides.transparentBackground ?? els.transparentBackground.checked
   };
 }
 
@@ -169,6 +178,15 @@ async function waitForStyleFont(style) {
   if (document.fonts?.load) {
     await document.fonts.load(`${style.weight} 48px ${cssFontName(style.family)}`, "བོད");
   }
+}
+
+function switchPage(pageName) {
+  const showLibrary = pageName === "library";
+  els.previewPage.classList.toggle("active", !showLibrary);
+  els.libraryPage.classList.toggle("active", showLibrary);
+  els.navPreview.classList.toggle("active", !showLibrary);
+  els.navLibrary.classList.toggle("active", showLibrary);
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function wrapText(ctx, text, maxWidth) {
@@ -277,7 +295,6 @@ function applyEffect(ctx, style, settings, width, height) {
   if (style.effect === "shadow") {
     ctx.fillStyle = settings.textColor;
     ctx.shadowColor = "rgba(0, 0, 0, 0.28)";
-    ctx.shadowBlur = 0;
     ctx.shadowOffsetX = Math.max(2, settings.fontSize * 0.045);
     ctx.shadowOffsetY = Math.max(2, settings.fontSize * 0.045);
     return;
@@ -294,17 +311,17 @@ function paintText(ctx, line, x, y, style) {
 }
 
 function renderCanvas(canvas, style, options = {}) {
-  const settings = getSettings();
+  const settings = getSettings(options.settings);
   const scale = options.scale || window.devicePixelRatio || 1;
   const width = options.width || 1180;
-  const maxTextWidth = width - settings.padding * 2;
+  const maxTextWidth = Math.max(40, width - settings.padding * 2);
   const ctx = canvas.getContext("2d");
   const fontStack = `${style.weight} ${settings.fontSize}px ${cssFontName(style.family)}, "Noto Serif Tibetan", serif`;
 
   ctx.font = fontStack;
   const lines = wrapText(ctx, settings.text, maxTextWidth);
   const linePx = settings.fontSize * settings.lineHeight;
-  const height = Math.max(180, settings.padding * 2 + lines.length * linePx);
+  const height = options.height || Math.max(160, settings.padding * 2 + lines.length * linePx);
 
   canvas.width = Math.ceil(width * scale);
   canvas.height = Math.ceil(height * scale);
@@ -329,6 +346,23 @@ function renderCanvas(canvas, style, options = {}) {
   });
 }
 
+function renderSample(canvas, style) {
+  const sampleText = (els.textInput.value.trim() || "བོད་ཡིག").slice(0, 24);
+  renderCanvas(canvas, style, {
+    width: 220,
+    height: 88,
+    scale: 1.5,
+    settings: {
+      text: sampleText,
+      fontSize: 32,
+      lineHeight: 1.1,
+      padding: 12,
+      backgroundColor: "#f8f3e8",
+      transparentBackground: false
+    }
+  });
+}
+
 function makeSafeFileName(name) {
   return name.replace(/[\\/:*?"<>|]/g, "-").replace(/\s+/g, "_");
 }
@@ -341,63 +375,85 @@ function downloadCanvas(canvas, style) {
 }
 
 async function updateMain() {
+  const token = ++renderToken;
   const style = getSelectedStyle();
   els.currentFontName.textContent = style.label;
   els.fontStatus.textContent = "正在加载网页字体";
-  await waitForStyleFont(style);
-  renderCanvas(els.mainCanvas, style);
-  els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
-  els.fontStatus.textContent = `${style.source}已加载，可导出 PNG`;
+  els.fontSelect.value = style.id;
+  updateActiveCards();
+
+  try {
+    await waitForStyleFont(style);
+    if (token !== renderToken) return;
+    renderCanvas(els.mainCanvas, style);
+    els.mainCanvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+    els.fontStatus.textContent = `${style.source}已加载，可导出 PNG`;
+  } catch (error) {
+    if (token !== renderToken) return;
+    els.fontStatus.textContent = "字体加载失败，请换一个字体";
+  }
+}
+
+function selectStyle(styleId, options = {}) {
+  selectedStyleId = styleId;
+  els.fontSelect.value = styleId;
+  updateMain();
+  updateActiveCards();
+  if (options.switchToPreview) switchPage("preview");
+}
+
+function updateActiveCards() {
+  document.querySelectorAll(".font-card").forEach((card) => {
+    card.classList.toggle("active", card.dataset.styleId === selectedStyleId);
+  });
+}
+
+function filteredStyles() {
+  const query = els.fontSearch.value.trim().toLowerCase();
+  if (!query) return styles;
+  return styles.filter((style) => `${style.label} ${style.source}`.toLowerCase().includes(query));
 }
 
 function buildGallery() {
+  const visibleStyles = filteredStyles();
   els.gallery.innerHTML = "";
+  els.libraryCount.textContent = `${visibleStyles.length} / ${styles.length} 个字体`;
 
-  for (const style of styles) {
+  for (const style of visibleStyles) {
     const card = document.createElement("article");
     card.className = "font-card";
+    card.dataset.styleId = style.id;
+    card.classList.toggle("active", style.id === selectedStyleId);
 
-    const header = document.createElement("header");
+    const info = document.createElement("div");
+    info.className = "font-info";
     const title = document.createElement("strong");
     const status = document.createElement("small");
     title.textContent = style.label;
     status.textContent = "加载中";
-    header.append(title, status);
+    info.append(title, status);
 
+    const sample = document.createElement("div");
+    sample.className = "font-sample";
     const canvas = document.createElement("canvas");
-    renderCanvas(canvas, style, { width: 760, scale: 1.5 });
-    canvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
-
-    const footer = document.createElement("footer");
     const choose = document.createElement("button");
-    const save = document.createElement("button");
     choose.type = "button";
-    save.type = "button";
-    choose.textContent = "使用这个样式";
-    save.textContent = "↓";
-    save.title = "下载 PNG";
-    save.className = "icon-button secondary";
-    footer.append(choose, save);
+    choose.textContent = style.id === selectedStyleId ? "已选择" : "选择";
+    sample.append(canvas, choose);
 
-    choose.addEventListener("click", () => {
-      selectedStyleId = style.id;
-      els.fontSelect.value = style.id;
-      updateMain();
-    });
-    save.addEventListener("click", async () => {
-      await waitForStyleFont(style);
-      renderCanvas(canvas, style, { width: 760, scale: 2 });
-      downloadCanvas(canvas, style);
-      renderCanvas(canvas, style, { width: 760, scale: 1.5 });
+    card.addEventListener("click", () => selectStyle(style.id, { switchToPreview: true }));
+    choose.addEventListener("click", (event) => {
+      event.stopPropagation();
+      selectStyle(style.id, { switchToPreview: true });
     });
 
-    card.append(header, canvas, footer);
+    card.append(info, sample);
     els.gallery.append(card);
+    renderSample(canvas, style);
 
     waitForStyleFont(style)
       .then(() => {
-        renderCanvas(canvas, style, { width: 760, scale: 1.5 });
-        canvas.classList.toggle("transparent-preview", getSettings().transparentBackground);
+        renderSample(canvas, style);
         status.textContent = style.source;
       })
       .catch(() => {
@@ -430,29 +486,36 @@ async function addUploadedFonts(files) {
     selectedStyleId = id;
   }
   fillFontSelect();
-  await updateMain();
   buildGallery();
+  await updateMain();
 }
 
 function scheduleRender() {
   updateMain();
-  buildGallery();
+  window.clearTimeout(galleryTimer);
+  galleryTimer = window.setTimeout(buildGallery, 140);
 }
 
 function bindEvents() {
+  els.navPreview.addEventListener("click", () => switchPage("preview"));
+  els.navLibrary.addEventListener("click", () => switchPage("library"));
+  els.openLibraryTop.addEventListener("click", () => switchPage("library"));
+  els.backToPreviewTop.addEventListener("click", () => switchPage("preview"));
+
   ["input", "change"].forEach((eventName) => {
     els.textInput.addEventListener(eventName, scheduleRender);
-    els.fontSize.addEventListener(eventName, scheduleRender);
-    els.lineHeight.addEventListener(eventName, scheduleRender);
-    els.padding.addEventListener(eventName, scheduleRender);
+    els.fontSize.addEventListener(eventName, updateMain);
+    els.lineHeight.addEventListener(eventName, updateMain);
+    els.padding.addEventListener(eventName, updateMain);
     els.textColor.addEventListener(eventName, scheduleRender);
     els.backgroundColor.addEventListener(eventName, scheduleRender);
     els.transparentBackground.addEventListener(eventName, scheduleRender);
   });
 
+  els.fontSearch.addEventListener("input", buildGallery);
+
   els.fontSelect.addEventListener("change", () => {
-    selectedStyleId = els.fontSelect.value;
-    updateMain();
+    selectStyle(els.fontSelect.value);
   });
 
   els.refresh.addEventListener("click", scheduleRender);
